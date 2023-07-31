@@ -1,0 +1,7 @@
+OS: Linux-5.3.0-64-generic-x86_64-with-debian-buster-sid #58-Ubuntu SMP Fri Jul 10 19:33:51 UTC 2020
+Python: 3.7.13
+Stable-Baselines3: 1.6.0
+PyTorch: 1.11.0+cu102
+GPU Enabled: True
+Numpy: 1.21.5
+Gym: 0.13.0
