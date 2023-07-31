@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from functions import make_parallel_envs
 import pandas as pd
+import pickle
 
 # Todorov, manipulation task
 
@@ -39,7 +40,7 @@ if __name__=='__main__':
         'Last-model-P1/phase1_final.zip',
     )'''
 
-    PATH_TO_NORMALIZED_ENV = os.path.join(
+    '''PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -148,22 +149,31 @@ if __name__=='__main__':
     tot_pos = np.concatenate(tot_pos,axis=0)
     tot_vel = np.concatenate(tot_vel,axis=0)
 
+    fp_posvel = open('/home/ingster/Bureau/SIL-BigResults/posvel_synergies', 'wb')
+    pickle.dump([tot_pos,tot_vel],fp_posvel)
+    fp_posvel.close()'''
+
+    l = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/posvel_synergies','rb'))
+    tot_vel = l[1]
+    tot_pos = l[0]
+
     def PCvsVar(df,title,filename,n_comp=23):
         pca = PCA(n_components=n_comp)
         pca.fit_transform(np.copy(df))
         plt.clf()
-        plt.bar(range(1,n_comp+1), pca.explained_variance_ratio_, alpha=0.5, align='center',label='Individual explained variance')
-        plt.step(range(1,n_comp+1), np.cumsum(pca.explained_variance_ratio_), where='mid',label='Cumulative explained variance')
-        plt.xlabel('Number of principal components',fontsize=13)
-        plt.ylabel('Percentage of explained variance',fontsize=13)
-        plt.legend(fontsize=13,loc='best')
-        plt.title(title,fontsize=13)
-        plt.yticks(fontsize=13)
-        plt.xticks(fontsize=13)
+        plt.bar(range(1,n_comp+1), pca.explained_variance_ratio_, alpha=0.5, align='center',label='Individual variance')
+        plt.step(range(1,n_comp+1), np.cumsum(pca.explained_variance_ratio_), where='mid',label='Cumulative variance')
+        plt.xlabel('Number of PCs',fontsize=21)
+        plt.ylabel('Explained variance',fontsize=21)
+        plt.legend(fontsize=21,loc='best')
+        plt.title(title,fontsize=21)
+        plt.yticks(fontsize=21)
+        plt.xticks(fontsize=21)
         plt.axhline(y=0.95, color='r', linestyle='-')
         plt.axhline(y=0.85, color='g', linestyle='-')
-        plt.text(15.5, 0.89, '95% cut-off threshold', color = 'red', fontsize=12)
-        plt.text(15.5, 0.79, '85% cut-off threshold', color = 'green', fontsize=12)
+        plt.text(21, 0.87, '95%', color = 'red', fontsize=21)
+        plt.text(21, 0.77, '85%', color = 'green', fontsize=21)
+        plt.subplots_adjust(left=0.15,bottom=0.15)
         plt.savefig(os.path.join(ROOT_DIR,"SIL-Results/Motor-synergies/DOF-baoding/"+filename+".png"))
         return pca.explained_variance_ratio_
 

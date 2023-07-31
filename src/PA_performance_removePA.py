@@ -70,7 +70,7 @@ if __name__=="__main__":
     )
 
     env_name = "CustomMyoBaodingBallsP2"
-    render = False
+    render = True
     
     config = set_config(period=5,rot_dir="cw")
     rollouts = []
@@ -91,45 +91,14 @@ if __name__=="__main__":
     eval_model = model
     eval_env = EnvironmentFactory.create(env_name,**config)
 
-    for n in range(num_ep):
-        acts = []
-        cum_reward = 0
-        lstm_states = None
-        obs = eval_env.reset()
-        print(eval_env.which_task)
-        episode_starts = np.ones((1,), dtype=bool)
-        done = False
-        timestep = 0
-        while not done: 
-            if render :
-                eval_env.sim.render(mode="window")
-                
-            timestep += 1
-            action, lstm_states = eval_model.predict(envs.normalize_obs(obs),
-                                                    state=lstm_states,
-                                                    episode_start=episode_starts,
-                                                    deterministic=True,
-                                                    )
-                                                        
-            obs, rewards, done, info = eval_env.step(action)
-            episode_starts = done
-            cum_reward += rewards
-            acts.append(action)
-        print('episode %s : '%n,cum_reward)
-        rollouts.append({'reward':cum_reward,'action':np.array(acts)})
-        
-    fp_rollouts = open('/home/ingster/Bureau/SIL-BigResults/rollouts', 'wb')
-    pickle.dump(rollouts,fp_rollouts)
-    fp_rollouts.close()
-
     rollouts = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/rollouts','rb'))
-
     actions = np.concatenate([rollout['action'] for rollout in rollouts])
-    performance = []
+    pca = PCA(n_components=n_comp).fit(actions)
 
+    '''performance = []
     for k in range(n_comp):
         performance_ep = []
-        pca = PCA(n_components=n_comp-k).fit(actions)
+        components = pca.components_[k:]
         for n in range(num_ep):
             acts = []
             cum_reward = 0
@@ -149,23 +118,27 @@ if __name__=="__main__":
                                                         deterministic=True,
                                                         )
                 
-                action_proj = pca.inverse_transform(pca.transform(action.reshape(-1,39)))
-                obs, rewards, done, info = eval_env.step(action_proj.reshape(39,))
+                action_proj = np.dot(action.reshape(-1,39)-pca.mean_,components.T)
+                action_backproj = np.dot(action_proj,components)+pca.mean_
+                obs, rewards, done, info = eval_env.step(action_backproj.reshape(39,))
                 episode_starts = done
                 cum_reward += rewards
             performance_ep.append(cum_reward)
             print(cum_reward)
-        performance.append({'components':pca.components_,'reward':np.mean(np.array(performance_ep))})
+        performance.append({'components':components,'reward':np.mean(np.array(performance_ep))})
 
-    fp_acts_pcs = open('/home/ingster/Bureau/SIL-BigResults/performance_actions_components', 'wb')
+    fp_acts_pcs = open('/home/ingster/Bureau/SIL-BigResults/performance_actions_removed_highvarPA', 'wb')
     pickle.dump(performance,fp_acts_pcs)
-    fp_acts_pcs.close()
+    fp_acts_pcs.close()'''
 
-    performance_components = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/performance_actions_components','rb'))
+    performance_components = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/performance_actions_removed_highvarPA','rb'))
     perfs = [d['reward'] for d in performance_components]
     comps = [d['components'] for d in performance_components]
-    plt.plot([k for k in range(n_comp)],perfs,linewidth=0.8,color='black')
-    plt.xlabel('Dimensions removed in the action space')
-    plt.ylabel('Average cumulative reward over 20 episodes')
-    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/Muscle-activations/principal_actions_perf.png'))
-
+    plt.plot([k for k in range(n_comp)],perfs,linewidth=1)
+    plt.xlabel('Number of dimensions \nremoved in the action space',fontsize=21,labelpad=10)
+    plt.ylabel('Cumulative reward',fontsize=21,labelpad=10)
+    plt.title('Order of increasing variance',fontsize=21)
+    plt.yticks(fontsize=21)
+    plt.xticks(fontsize=21)
+    plt.subplots_adjust(left=0.2,bottom=0.23)
+    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/Muscle-activations/principal_actions_removed_perf.png'))

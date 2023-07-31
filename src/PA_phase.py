@@ -1,10 +1,14 @@
-from principal_actions_performance import *
+from PA_performance import * 
+from sklearn.preprocessing import MinMaxScaler
+import seaborn as sns
+import pandas as pd
 
-# To plot actions in the rotated action space
+if __name__=="__main__":
 
-if __name__=='__main__':
+    num_ep = 100
+    n_comp = 39
 
-    PATH_TO_NORMALIZED_ENV = os.path.join(
+    '''PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -17,6 +21,7 @@ if __name__=='__main__':
     render = False
     
     config = set_config(period=5,rot_dir="cw")
+    rollouts = []
 
     envs = make_parallel_envs(env_name, config, num_env=1)
     envs = VecNormalize.load(PATH_TO_NORMALIZED_ENV, envs)
@@ -33,21 +38,17 @@ if __name__=='__main__':
 
     eval_model = model
     eval_env = EnvironmentFactory.create(env_name,**config)
-
-    performance_components = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/performance_actions_components','rb'))
-    principal_actions = [d['components'] for d in performance_components][0]
-
-    
-    num_ep = 1
-    acts_proj = []
+    actions = []
     for n in range(num_ep):
+        print(n)
+        acts_1ep = []
         cum_reward = 0
         lstm_states = None
         obs = eval_env.reset()
         episode_starts = np.ones((1,), dtype=bool)
         done = False
         timestep = 0
-        while not done : 
+        while not done: 
             if render :
                 eval_env.sim.render(mode="window")
                 
@@ -57,20 +58,40 @@ if __name__=='__main__':
                                                     episode_start=episode_starts,
                                                     deterministic=True,
                                                     )
-            
+                                                        
             obs, rewards, done, info = eval_env.step(action)
-            act_proj = np.dot(action.reshape(-1,39),principal_actions[0:2].T)
             episode_starts = done
-            cum_reward += rewards
-            acts_proj.append(act_proj)
-        
-        acts_proj = np.squeeze(acts_proj)
-        print(cum_reward)
+            cum_reward += rewards   
+            acts_1ep.append(action)
+        if len(acts_1ep) < 200 :
+            temp = np.zeros((200,39))
+            temp[:len(acts_1ep)] += acts_1ep
+            acts_1ep = temp
+        actions.append(np.array(acts_1ep))
+    
+    fp_rollouts = open('/home/ingster/Bureau/SIL-BigResults/rollout_100ep', 'wb')
+    pickle.dump(actions,fp_rollouts)
+    fp_rollouts.close()'''
 
-    fig = plt.figure()
-    ax = plt.axes(projection ='3d')    
-    ax.plot3D(acts_proj[:,0], acts_proj[:,1], acts_proj[:,2],linewidth=0.7,color='black')
-    ax.set_xlabel('Principal action 37')
-    ax.set_ylabel('Principal action 38')
-    ax.set_zlabel('Principal action 39')
-    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/Muscle-activations/36-39principal_actions.png'))
+    actions = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/rollout_100ep','rb'))
+    
+    pca = PCA(n_components=n_comp)
+    mean_actions = sum(actions)/len(actions)
+    mean_weights = pca.fit_transform(mean_actions)
+
+    minmax = MinMaxScaler(feature_range=(-1,1))
+    weights=[]
+    for j in range(15):
+        norm_weights = minmax.fit_transform(mean_weights[13:,j].reshape(187,1))
+        weights.append(norm_weights)
+        '''plt.plot([n for n in range(200)],norm_weights,label='PA'+str(j+1),linewidth=1.2)
+    plt.legend(loc='upper right')
+    plt.xlabel('Time step')
+    plt.ylabel('PC weight')
+    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/Muscle-activations/principal_actions_phase.png'))'''
+    
+    plt.clf()
+    fig = sns.heatmap(pd.DataFrame(np.squeeze(weights)),cmap="coolwarm").get_figure()
+    plt.show()
+
+
