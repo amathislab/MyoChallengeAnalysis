@@ -7,7 +7,6 @@ from stable_baselines3.common.vec_env import VecNormalize
 import matplotlib.pyplot as plt
 from stable_baselines3.common.vec_env.subproc_vec_env import SubprocVecEnv
 #import umap
-#import umap.plot
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px

@@ -60,7 +60,7 @@ if __name__=="__main__":
     num_ep = 20
     n_comp = 39
 
-    '''PATH_TO_NORMALIZED_ENV = os.path.join(
+    PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -161,7 +161,7 @@ if __name__=="__main__":
 
     fp_acts_pcs = open('/home/ingster/Bureau/SIL-BigResults/performance_actions_components_t', 'wb')
     pickle.dump(performance,fp_acts_pcs)
-    fp_acts_pcs.close()'''
+    fp_acts_pcs.close()
 
     performance_components = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/performance_actions_components_t','rb'))
     perfs = [d['reward'] for d in performance_components]

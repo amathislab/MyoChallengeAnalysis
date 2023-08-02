@@ -45,7 +45,7 @@ if __name__=='__main__':
     n_comp = 23
     n = 12
 
-    conds = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/synergies_tasks','rb'))
+    conds = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/synergies_tasks','rb')) # cf tasks_lowvar_pc.py
     hold_velocities = np.concatenate([cond['hand velocity'] for cond in conds if cond['encoding']=='hold'])
     cw_velocities = np.concatenate([cond['hand velocity'] for cond in conds if cond['encoding']=='cw'])
     ccw_velocities = np.concatenate([cond['hand velocity'] for cond in conds if cond['encoding']=='ccw'])
@@ -58,7 +58,7 @@ if __name__=='__main__':
     hold_ccw = mean_ratio(cproj_hold_ccw,label1='Hold on CCW',label2='CCW on hold')
     ccw_cw = mean_ratio(cproj_ccw_cw,label1='CCW on CW',label2='CW on CCW')
 
-    V = {'hold vs. cw':hold_cw[0], 'hold vs. ccw':hold_ccw[0], 'cw vs. ccw':ccw_cw[0]}
+    V = {'hold vs. cw':np.round(hold_cw[0],7), 'hold vs. ccw':np.round(hold_ccw[0],7), 'cw vs. ccw':np.round(ccw_cw[0],7)}
     pd.DataFrame(V,index=[0]).to_csv(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/High-level-PCs/CW-vs-CCW-vs-Hold/V1-V2.csv'))
 
 

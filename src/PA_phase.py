@@ -92,6 +92,10 @@ if __name__=="__main__":
     
     plt.clf()
     fig = sns.heatmap(pd.DataFrame(np.squeeze(weights)),cmap="coolwarm").get_figure()
+    plt.xticks(fontsize=21)
+    plt.yticks(fontsize=21)
+    plt.xlabel('Time step')
+    plt.ylabel('Principal action weight')
     plt.show()
 
 
