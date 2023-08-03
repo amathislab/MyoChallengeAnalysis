@@ -548,3 +548,49 @@ def get_layers_P1(ball_parameter,envir,net,env_name,n_config,render=False):
             # shape of mlp_state is [256] using np.squeeze instead of [1,1,256]
         
     return [data_param, rwd_ep]
+
+def set_config(period,rot_dir):
+    return {
+        "weighted_reward_keys": {
+            "pos_dist_1": 0,
+            "pos_dist_2": 0,
+            "act_reg": 0,
+            "alive": 0,
+            "solved": 5,
+            "done": 0,
+            "sparse": 0
+        },
+        "enable_rsi": False,
+        "rsi_probability": 0,
+        "balls_overlap": False,
+        "overlap_probability": 0,
+        "noise_fingers": 0,
+        "limit_init_angle": 3.141592653589793,
+        "goal_time_period": [
+            period,
+            period
+        ],
+        "goal_xrange": [
+            0.02,
+            0.03
+        ],
+        "goal_yrange": [
+            0.022,
+            0.032
+        ],
+        "obj_size_range": [
+            0.018,
+            0.024
+        ],
+        "obj_mass_range": [
+            0.03,
+            0.3
+        ],
+        "obj_friction_change": [
+            0.2,
+            0.001,
+            2e-05
+        ],
+        "task_choice": "fixed",
+        "rotation_direction" : rot_dir
+    }

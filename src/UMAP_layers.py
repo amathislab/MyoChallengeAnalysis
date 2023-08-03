@@ -5,11 +5,9 @@ from definitions import ROOT_DIR
 import os
 import pickle
 import umap
-import plotly.express as px 
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
 
 def get_layers(config,envir,net,env_name,num_ep,render=False):
 
@@ -78,13 +76,11 @@ def measure_tangling(data):
     
     return Q_all
 
-def get_eps(data,num_ep):
-    return [[d for d in data if data['episode']==i] for i in range(num_ep)]
-
 
 if __name__=="__main__":
     
-    config = {
+    n_mass = 3
+    configs = [{
         "weighted_reward_keys": {
             "pos_dist_1": 0,
             "pos_dist_2": 0,
@@ -101,33 +97,33 @@ if __name__=="__main__":
         "noise_fingers": 0,
         "limit_init_angle": 3.141592653589793,
         "goal_time_period": [
-            4,
-            6
+            5,
+            5
         ],
         "goal_xrange": [
-            0.02,
-            0.03
+            0.025,
+            0.025
         ],
         "goal_yrange": [
-            0.022,
-            0.032
+            0.027,
+            0.027
         ],
         "obj_size_range": [
-            0.018,
-            0.024
+            0.021,
+            0.021
         ],
         "obj_mass_range": [
-            0.03,
-            0.3
+            mass,
+            mass
         ],
         "obj_friction_change": [
-            0.2,
-            0.001,
-            2e-05
+            0,
+            0,
+            0
         ],
         "task_choice": "fixed",
         "rotation_direction" : "cw"
-    }
+    } for mass in np.linspace(0.03,0.3,n_mass)]
 
     PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
@@ -139,84 +135,100 @@ if __name__=="__main__":
     )
 
     env_name = "CustomMyoBaodingBallsP2"
-    num_ep = 3
+    
+    layers = []
+    for config in configs : 
+        num_ep = 1
+        layers.append(get_layers(config=config,envir=PATH_TO_NORMALIZED_ENV,env_name=env_name,net=PATH_TO_PRETRAINED_NET,num_ep=num_ep))
 
-    '''layers = get_layers(configuration=config,envir=PATH_TO_NORMALIZED_ENV,env_name=env_name,net=PATH_TO_PRETRAINED_NET,num_ep=num_ep)
-
-    fp_rollouts = open('/home/ingster/Bureau/SIL-BigResults/layers_%seps'%num_ep, 'wb')
+    fp_rollouts = open('/home/ingster/Bureau/SIL-BigResults/layers_mass', 'wb')
     pickle.dump(layers,fp_rollouts)
-    fp_rollouts.close()'''
+    fp_rollouts.close()
 
-    layers = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/layers_%seps'%num_ep,'rb'))
+    layers = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/layers_mass','rb'))
+    len_ep1 = len(layers[0])
+    len_ep2 = len(layers[1])
+    len_ep3 = len(layers[2])
 
+    layers = [item for sublist in layers for item in sublist] # concatenation
     n_comp = 3
     umap_apply = umap.UMAP(n_components=n_comp,random_state=42)
 
     obs = np.array([d['observation'] for d in layers])
     obs_trans = umap_apply.fit_transform(obs)
-    Q_obs = (np.max(measure_tangling(obs_trans[0:200]))+np.max(measure_tangling(obs_trans[200:400]))+np.max(measure_tangling(obs_trans[400:600])))/3
-    Q_obs = np.round(Q_obs,2)
+    Q_obs = np.mean(np.mean(measure_tangling(obs_trans[0:len_ep1]))+np.mean(measure_tangling(obs_trans[len_ep1:len_ep1+len_ep2]))+np.mean(measure_tangling(obs_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3])))
 
-    '''lstm = np.array([d['LSTM hidden state'] for d in layers])
+    lstm = np.array([d['LSTM hidden state'] for d in layers])
     lstm_trans = umap_apply.fit_transform(lstm)
-    Q_lstm = (np.max(measure_tangling(lstm_trans[0:200]))+np.max(measure_tangling(lstm_trans[200:400]))+np.max(measure_tangling(lstm_trans[400:600])))/3
+    Q_lstm = np.mean(np.mean(measure_tangling(lstm_trans[0:len_ep1]))+np.mean(measure_tangling(lstm_trans[len_ep1:len_ep1+len_ep2]))+np.mean(measure_tangling(lstm_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3])))
 
     l1 = np.array([d['Linear layer 1'] for d in layers])
     l1_trans = umap_apply.fit_transform(l1)
-    Q_l1 = (np.max(measure_tangling(l1_trans[0:200]))+np.max(measure_tangling(l1_trans[200:400]))+np.max(measure_tangling(l1_trans[400:600])))/3
+    Q_l1 = np.mean(np.mean(measure_tangling(l1_trans[0:len_ep1]))+np.mean(measure_tangling(l1_trans[len_ep1:len_ep1+len_ep2]))+np.mean(measure_tangling(l1_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3])))
 
     l2 = np.array([d['Linear layer 2'] for d in layers])
     l2_trans = umap_apply.fit_transform(l2)
-    Q_l2 = (np.max(measure_tangling(l2_trans[0:200]))+np.max(measure_tangling(l2_trans[200:400]))+np.max(measure_tangling(l2_trans[400:600])))/3
+    Q_l2 = np.mean(np.mean(measure_tangling(l2_trans[0:len_ep1]))+np.mean(measure_tangling(l2_trans[len_ep1:len_ep1+len_ep2]))+np.mean(measure_tangling(l2_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3])))
 
     acts = np.array([d['actions'] for d in layers])
     acts_trans = umap_apply.fit_transform(acts)
-    Q_acts = (np.max(measure_tangling(acts_trans[0:200]))+np.max(measure_tangling(acts_trans[200:400]))+np.max(measure_tangling(acts_trans[400:600])))/3'''
+    Q_acts = np.mean(np.mean(measure_tangling(acts_trans[0:len_ep1]))+np.mean(measure_tangling(acts_trans[len_ep1:len_ep1+len_ep2]))+np.mean(measure_tangling(acts_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3])))
 
-    cmap = mpl.colormaps['Set1']
-    colors = cmap(np.linspace(0,0.5,num_ep))
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    projected_obs = [obs_trans[0:200],obs_trans[200:400],obs_trans[400:600]]
-    for i in range(num_ep):
-        obs_trans = projected_obs[i]
-        ax.plot(obs_trans[:,0],obs_trans[:,1],obs_trans[:,2],color=colors[i],linewidth=1,label='Episode %s'%i)
-    ax.view_init(elev=30.,azim=45)
-    plt.legend(fontsize=12,loc='best')
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.xlabel('Proj. 1',fontsize=12)
-    plt.ylabel('Proj. 2',fontsize=12)
-    plt.title('Observation space',fontsize=16)
-    ax.set_zlabel('Proj. 3',fontsize=12)
-    ax.text(x=14, y=2, z=13, s='Q = %s'%Q_obs, color='black', 
-        bbox=dict(facecolor='none', edgecolor='grey', boxstyle='round',pad=0.5),fontsize=16)
-    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/obs.png'))
+    projected_all = [obs_trans,lstm_trans,l1_trans,l2_trans,acts_trans]
+    filenames = ['obs','lstm','l1','l2','acts']
+    titles = ['Observations','LSTM','Linear 1','Linear 2','Actions']
+    Qs = [Q_obs,Q_lstm,Q_l1,Q_l2,Q_acts]
 
-    targets = [d['episode'] for d in layers]
-    cols = ['Proj. 1','Proj. 2','Proj. 3']
+    for projected,filename,title,q in zip(projected_all,filenames,titles,Qs):
+        eps = [projected[0:len_ep1],projected[len_ep1:len_ep1+len_ep2],projected[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3]]
+        cmap = mpl.colormaps['Set1']
+        colors = cmap(np.linspace(0,0.5,n_mass))
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        for i in range(n_mass):
+            projected = eps[i]
+            ax.plot(projected[:,0],projected[:,1],projected[:,2],color=colors[i],linewidth=1,label='Mass '+str(i+1))
 
-    '''obs_df = pd.DataFrame(data=obs_trans,columns=cols)
-    lstm_df = pd.DataFrame(data=lstm_trans,columns=cols)
-    l1_df = pd.DataFrame(data=l1_trans,columns=cols)
-    l2_df = pd.DataFrame(data=l2_trans,columns=cols)
-    acts_df = pd.DataFrame(data=acts_trans,columns=cols)
+        ax.view_init(elev=30.,azim=45)
 
-    fig1 = px.line_3d(lstm_df,x=cols[0],y=cols[1],z=cols[2],color=targets)
-    fig1.write_html(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/lstm.html'))
-
-    fig2 = px.line_3d(obs_df,x=cols[0],y=cols[1],z=cols[2],color=targets)
-    fig2.write_html(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/obs.html'))
-
-    fig3 = px.line_3d(l1_df,x=cols[0],y=cols[1],z=cols[2],color=targets)
-    fig3.write_html(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/l1.html'))
-
-    fig4 = px.line_3d(l2_df,x=cols[0],y=cols[1],z=cols[2],color=targets)
-    fig4.write_html(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/l2.html'))
-
-    fig5 = px.line_3d(acts_df,x=cols[0],y=cols[1],z=cols[2],color=targets)
-    fig5.write_html(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/acts.html'))'''
-    
+        plt.legend(fontsize=21,loc='center left', bbox_to_anchor=(0.7, 0.9))
+        plt.xlabel('Proj. 1',fontsize=21,labelpad=10)
+        plt.ylabel('Proj. 2',fontsize=21,labelpad=10)
+        ax.set_zlabel('Proj. 3',fontsize=21,labelpad=10)
+        plt.title(title,fontsize=21)
+        ax.text2D(0.01,0.96, ha='left', va='top', transform=ax.transAxes, s='Q = %s'%np.round(q,3), color='black', 
+            bbox=dict(facecolor='none', edgecolor='grey', boxstyle='round',pad=0.3),fontsize=21)
+        
+        ax.locator_params(axis='x', nbins=5)
+        ax.locator_params(axis='y', nbins=5)
+        ax.locator_params(axis='z', nbins=5)
+        font = {'size': 19}
+        plt.xticks(fontsize=font['size'])
+        plt.yticks(fontsize=font['size'])
+        ax.tick_params('z', labelsize=font['size'])
+        plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/%s.png'%filename))
 
 
+    obs_trans_per_mass = [obs_trans[0:len_ep1],obs_trans[len_ep1:len_ep1+len_ep2],obs_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3]]
+    lstm_trans_per_mass = [lstm_trans[0:len_ep1],lstm_trans[len_ep1:len_ep1+len_ep2],lstm_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3]]
+    acts_trans_per_mass = [acts_trans[0:len_ep1],acts_trans[len_ep1:len_ep1+len_ep2],acts_trans[len_ep1+len_ep2:len_ep1+len_ep2+len_ep3]]
 
+    for trans, title,filename in zip([obs_trans_per_mass,lstm_trans_per_mass],['Q observations','Q LSTM'],['obs-acts','lstm-acts']):
+        figure = plt.figure()
+        for i in range(n_mass):
+            plt.scatter(measure_tangling(acts_trans_per_mass[i]),measure_tangling(trans[i]),s=10,label='Mass %s'%i)
+        plt.ylabel(title,fontsize=21)
+        plt.xlabel('Q actions',fontsize=21)
+        plt.xticks(fontsize=19)
+        plt.yticks(fontsize=19)
+        lgnd = plt.legend(fontsize=21)
+        lgnd.legendHandles[0]._sizes = [40]
+        lgnd.legendHandles[1]._sizes = [40]
+        lgnd.legendHandles[2]._sizes = [40]
+        plt.subplots_adjust(left=0.15,bottom=0.2)
+        pt = (0, 0)
+        plt.axline(pt, slope=1, color='black')
+        plt.axis('equal')
+        plt.xlim(xmin=0)
+        plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/UMAP_layers/%s.png'%filename))
+        plt.clf()

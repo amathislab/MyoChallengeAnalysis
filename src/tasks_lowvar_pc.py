@@ -180,7 +180,7 @@ if __name__=="__main__":
     performance = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/class_performance_tasks_r','rb'))
     plt.plot([n for n in range(n_comp)],performance,'-o',linewidth=1,markersize=2,color='black')
     plt.axvline(x=pc_low_variance, ymax=0.46,color='r', linestyle='-',linewidth=1,label='1% Variance')
-    plt.legend(fontsize=16.5)
+    plt.legend(fontsize=21)
     plt.xlabel('Number of PCs removed',fontsize=21)
     plt.ylabel('Accuracy',fontsize=21)
     plt.title('Classification performance',fontsize=21)

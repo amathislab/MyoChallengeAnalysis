@@ -8,7 +8,7 @@ if __name__=="__main__":
     num_ep = 100
     n_comp = 39
 
-    '''PATH_TO_NORMALIZED_ENV = os.path.join(
+    PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -71,18 +71,19 @@ if __name__=="__main__":
     
     fp_rollouts = open('/home/ingster/Bureau/SIL-BigResults/rollout_100ep', 'wb')
     pickle.dump(actions,fp_rollouts)
-    fp_rollouts.close()'''
+    fp_rollouts.close()
 
     actions = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/rollout_100ep','rb'))
-    
+
     pca = PCA(n_components=n_comp)
     mean_actions = sum(actions)/len(actions)
     mean_weights = pca.fit_transform(mean_actions)
 
     minmax = MinMaxScaler(feature_range=(-1,1))
     weights=[]
+    t_min = 13; t_max = 200
     for j in range(15):
-        norm_weights = minmax.fit_transform(mean_weights[13:,j].reshape(187,1))
+        norm_weights = minmax.fit_transform(mean_weights[t_min:,j].reshape(t_max-t_min,1))
         weights.append(norm_weights)
         '''plt.plot([n for n in range(200)],norm_weights,label='PA'+str(j+1),linewidth=1.2)
     plt.legend(loc='upper right')
@@ -92,10 +93,10 @@ if __name__=="__main__":
     
     plt.clf()
     fig = sns.heatmap(pd.DataFrame(np.squeeze(weights)),cmap="coolwarm").get_figure()
-    plt.xticks(fontsize=21)
-    plt.yticks(fontsize=21)
-    plt.xlabel('Time step')
-    plt.ylabel('Principal action weight')
-    plt.show()
-
+    plt.yticks(ticks=np.arange(1,16,1),labels=np.arange(1,16,1),rotation=0,fontsize=17)
+    plt.xticks(rotation=45,ticks=np.arange(0,t_max-t_min,21),labels=np.arange(t_min,t_max,21),fontsize=16)
+    plt.xlabel('Time step',fontsize=21)
+    plt.ylabel('Principal actions',fontsize=21)
+    plt.subplots_adjust(left=0.15,bottom=0.2)
+    plt.savefig(os.path.join(ROOT_DIR,'SIL-Results/Motor-synergies/Muscle-activations/Rotation_heatmap.png'))
 
