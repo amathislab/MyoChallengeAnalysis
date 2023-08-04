@@ -68,7 +68,7 @@ if __name__=="__main__":
     num_cond = 3
     n_comp = 23
 
-    '''PATH_TO_NORMALIZED_ENV = os.path.join(
+    PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -146,14 +146,14 @@ if __name__=="__main__":
     
     fp_conditions = open('/home/ingster/Bureau/SIL-BigResults/synergies_tasks', 'wb')
     pickle.dump(conds,fp_conditions)
-    fp_conditions.close()'''
+    fp_conditions.close()
 
     conds = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/synergies_tasks','rb'))
     hand_kinematics = np.concatenate([cond['hand velocity'] for cond in conds])
 
     pca = PCA(n_components=n_comp).fit(hand_kinematics)
 
-    '''performance = []
+    performance = []
     stds = []
 
     for k in range(n_comp):
@@ -174,7 +174,7 @@ if __name__=="__main__":
     #plt.errorbar([n for n in range(n_comp)],performance,stds,linestyle='None', marker='o',markersize=3,linewidth=0.5)
     fp = open('/home/ingster/Bureau/SIL-BigResults/class_performance_tasks_r', 'wb')
     pickle.dump(performance,fp)
-    fp.close()'''
+    fp.close()
     
     pc_low_variance = next(x[0] for x in enumerate(pca.explained_variance_ratio_) if x[1] < 0.01)
     performance = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/class_performance_tasks_r','rb'))

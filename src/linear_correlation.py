@@ -9,6 +9,7 @@ from sb3_contrib import RecurrentPPO
 from stable_baselines3.common.vec_env import VecNormalize
 from functions import make_parallel_envs
 import matplotlib.pyplot as plt
+import pickle
 
 if __name__=='__main__':
 
@@ -157,6 +158,20 @@ if __name__=='__main__':
     OBS=np.concatenate(OBS,axis=0)
     LSTM=np.concatenate(LSTM,axis=0)
 
+    fp_params = open('/home/ingster/Bureau/SIL-BigResults/lin_corr', 'wb')
+    pickle.dump({'Mass':M,'Radius':Ra,'Friction':Fr,'Size':S,'Velocity':VEL,'Acceleration':ACC,'LSTM':LSTM,'Observations':OBS},fp_params)
+    fp_params.close()
+
+    params = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/lin_corr','rb'))
+
+    M=params['Mass']
+    Ra=params['Radius']
+    Fr=params['Friction']
+    S=params['Size']
+    VEL=params['Velocity']
+    ACC=params['Acceleration']
+    OBS=params['Observations']
+    LSTM=params['LSTM']
 
     regression = sklearn.linear_model.LinearRegression()
 

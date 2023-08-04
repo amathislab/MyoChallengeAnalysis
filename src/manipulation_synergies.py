@@ -18,29 +18,7 @@ if __name__=='__main__':
     env_name = 'CustomMyoBaodingBallsP2' 
     render = False
 
-    '''config = {
-        "weighted_reward_keys": {
-        "pos_dist_1": 0,
-        "pos_dist_2": 0,
-        "act_reg": 0,
-        "alive": 0,
-        "solved": 5,
-        "done": 0,
-        "sparse": 0
-        }
-        
-    }
-
     PATH_TO_NORMALIZED_ENV = os.path.join(
-        ROOT_DIR,
-        'Last-model-P1/normalized_env_phase1_final',
-    )
-    PATH_TO_PRETRAINED_NET = os.path.join(
-        ROOT_DIR,
-        'Last-model-P1/phase1_final.zip',
-    )'''
-
-    '''PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
         "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
     )
@@ -151,7 +129,7 @@ if __name__=='__main__':
 
     fp_posvel = open('/home/ingster/Bureau/SIL-BigResults/posvel_synergies', 'wb')
     pickle.dump([tot_pos,tot_vel],fp_posvel)
-    fp_posvel.close()'''
+    fp_posvel.close()
 
     l = pickle.load(open('/home/ingster/Bureau/SIL-BigResults/posvel_synergies','rb'))
     tot_vel = l[1]

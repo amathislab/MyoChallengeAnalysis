@@ -594,3 +594,69 @@ def set_config(period,rot_dir):
         "task_choice": "fixed",
         "rotation_direction" : rot_dir
     }
+
+def get_layers_basic(config,envir,net,env_name,num_ep,render=False):
+
+    data_layers = []
+    envs = make_parallel_envs(env_name, config, num_env=1)
+    envs = VecNormalize.load(envir, envs)
+    envs.training = False
+    envs.norm_reward = False
+    custom_objects = {
+        "learning_rate": lambda _: 0,
+        "lr_schedule": lambda _: 0,
+        "clip_range": lambda _: 0,
+    }
+    model = RecurrentPPO.load(
+            net, env=envs, device="cpu", custom_objects=custom_objects
+        )
+    
+    eval_model = model
+    eval_env = EnvironmentFactory.create(env_name,**config)
+
+    for i in range(num_ep):
+        print('Episode %s'%i)
+        cum_reward = 0
+        lstm_states = None
+        obs = eval_env.reset()
+        episode_starts = np.ones((1,), dtype=bool)
+        done = False
+        timestep = 0
+        while not done:
+            if render :
+                eval_env.sim.render(mode="window")
+                
+            timestep += 1
+            action, lstm_states = eval_model.predict(envs.normalize_obs(obs),
+                                                    state=lstm_states,
+                                                    episode_start=episode_starts,
+                                                    deterministic=True,
+                                                    ) 
+                                                        
+            obs, rewards, done, info = eval_env.step(action)
+            episode_starts = done
+            cum_reward += rewards
+
+            mlp1_state = model.policy.mlp_extractor.policy_net[0](torch.Tensor(np.squeeze(lstm_states[0]))) 
+            mlp2_state = model.policy.mlp_extractor.policy_net[2](model.policy.mlp_extractor.policy_net[1](mlp1_state)) 
+
+            mlp1_state = mlp1_state.detach().numpy()
+            mlp2_state = mlp2_state.detach().numpy()
+
+            d = {'config' : config, 'episode' : i, 'timestep': timestep, 'observation': obs,'actions' : action, 'rewards' : rewards, 'LSTM cell state' : np.squeeze(lstm_states[1]),
+                'LSTM hidden state':np.squeeze(lstm_states[0]),'Linear layer 1' : mlp1_state, 'Linear layer 2' : mlp2_state}
+            data_layers.append(d)
+
+    return data_layers
+
+def measure_tangling(data):
+    derivative = np.gradient(data,axis=0)
+
+    epsilon = 0.1*np.mean(np.linalg.norm(data,axis=1))
+    Q_all = []
+    for t in range(derivative.shape[0]):
+        Q = (np.linalg.norm(derivative[t] - derivative,axis=1)**2) / (epsilon + np.linalg.norm(data[t] - data,axis=1)**2)
+        Q = np.max(Q)
+        Q_all.append(Q)
+    
+    return Q_all

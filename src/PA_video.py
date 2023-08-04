@@ -37,7 +37,7 @@ if __name__=='__main__':
 
     
     num_ep = 50
-    acts_proj = []
+    render = True
     for n in range(num_ep):
         cum_reward = 0
         lstm_states = None
