@@ -32,7 +32,7 @@ class EnvironmentFactory:
         elif env_name == "MyoHandKeyTurnRandom":
             return gym.make("myoHandKeyTurnRandom-v0")
         elif env_name == "MyoBaodingBallsP1":
-            return gym.make("myoChallengeBaodingP1-v1")
+            return gym.make("myoChallengeBaodingP1-v1", **kwargs)
         elif env_name == "CustomMyoBaodingBallsP1":
             return gym.make("CustomMyoChallengeBaodingP1-v1", **kwargs)
         elif env_name == "CustomMyoReorientP1":

@@ -151,7 +151,6 @@ def plot_cumvar(n_comp,exp_var_ratio,title):
     plt.text(21, 0.87, '95%', color = 'red', fontsize=21)
     plt.text(21, 0.77, '85%', color = 'green', fontsize=21)
     plt.subplots_adjust(left=0.15,bottom=0.15)
-    plt.show()
 
 
 def cross_project_kin(vel1,vel2,n_comp,n_highpc):

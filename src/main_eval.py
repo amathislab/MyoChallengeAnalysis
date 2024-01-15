@@ -1,150 +1,214 @@
-import os
-import pickle
 import numpy as np
+import os
+import pandas as pd
+import json
+import torch
 from sb3_contrib import RecurrentPPO
-from stable_baselines3.common.vec_env import VecNormalize
-from stable_baselines3.common.vec_env.subproc_vec_env import SubprocVecEnv
-
-from definitions import ROOT_DIR
+from stable_baselines3.common.vec_env import VecNormalize, DummyVecEnv
 from envs.environment_factory import EnvironmentFactory
+from definitions import ROOT_DIR
+from myosuite.envs.myo.myochallenge.baoding_v1 import Task
+
 
 # evaluation parameters:
 render = False
-num_episodes = 200
+save_df = True
+out_dir = "final_model_500_episodes_activations_info_cw"
 
-env_name = "CustomMyoBaodingBallsP2"
 
-
-# Path to normalized Vectorized environment and best model (if not first task)
-PATH_TO_NORMALIZED_ENV = os.path.join(
-    ROOT_DIR,
-    "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
-)
-PATH_TO_PRETRAINED_NET = os.path.join(
-    ROOT_DIR,
-    "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/model.zip",
-)
-
-# Reward structure and task parameters:
-config = {
-    "weighted_reward_keys": {
-        "pos_dist_1": 0,
-        "pos_dist_2": 0,
-        "act_reg": 0,
-        "alive": 0,
-        "solved": 5,
-        "done": 0,
-        "sparse": 0
+eval_config = {
+    "env_config": {
+        "env_name": "MyoBaodingBallsP1",
+        "weighted_reward_keys": {
+            "pos_dist_1": 0,
+            "pos_dist_2": 0,
+            "act_reg": 0,
+            "solved": 5,
+            "done": 0,
+            "sparse": 0
+        },
+        "goal_time_period": [
+            4,
+            6
+        ],
+        "goal_xrange": [
+            0.02,
+            0.03
+        ],
+        "goal_yrange": [
+            0.022,
+            0.032
+        ],
+        "obj_size_range": [
+            0.018,
+            0.024
+        ],
+        "obj_mass_range": [
+            0.03,
+            0.3
+        ],
+        "obj_friction_change": [
+            0.2,
+            0.001,
+            2e-05
+        ],
+        "task_choice": "fixed"
     },
-    "enable_rsi": False,
-    "rsi_probability": 0,
-    "balls_overlap": False,
-    "overlap_probability": 0,
-    "noise_fingers": 0,
-    "limit_init_angle": 3.141592653589793,
-    "goal_time_period": [
-        5,
-        5
-    ],
-    "goal_xrange": [
-        0.02,
-        0.03
-    ],
-    "goal_yrange": [
-        0.022,
-        0.032
-    ],
-    "obj_size_range": [
-        0.018,
-        0.024
-    ],
-    "obj_mass_range": [
-        0.03,
-        0.3
-    ],
-    "obj_friction_change": [
-        0.2,
-        0.001,
-        2e-05
-    ],
-    "task_choice": "fixed",
-    "rotation_direction":"ccw"
-    }
+    "env_path": os.path.join(
+        ROOT_DIR,
+        "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
+    ),
+    "net_path": os.path.join(
+        ROOT_DIR,
+        "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/model.zip",
+    ),
+    "task": Task.BAODING_CW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "num_episodes": 500,
+    "seed": 42,
+}
+
+def load_vecnormalize(env_path, base_env):
+    venv = DummyVecEnv([lambda: base_env])
+    print("env path", env_path)
+    vecnormalize = VecNormalize.load(env_path, venv)
+    return vecnormalize
 
 
-# Function that creates and monitors vectorized environments:
-def make_parallel_envs(
-    env_name, env_config, num_env, start_index=0
-):  # pylint: disable=redefined-outer-name
-    def make_env(_):
-        def _thunk():
-            env = EnvironmentFactory.create(env_name, **env_config)
-            return env
-
-        return _thunk
-
-    return SubprocVecEnv([make_env(i + start_index) for i in range(num_env)])
-
-
-if __name__ == "__main__":
-    # Create vectorized environments:
-    envs = make_parallel_envs(env_name, config, num_env=1)
-
-    # Normalize environment:
-    envs = VecNormalize.load(PATH_TO_NORMALIZED_ENV, envs)
-    envs.training = False
-    envs.norm_reward = False
-
-    # Create model
+def load_model(model_path):
     custom_objects = {
         "learning_rate": lambda _: 0,
         "lr_schedule": lambda _: 0,
         "clip_range": lambda _: 0,
     }
-    model = RecurrentPPO.load(
-        PATH_TO_PRETRAINED_NET, env=envs, device="cpu", custom_objects=custom_objects
-    )
+    model = RecurrentPPO.load(model_path, custom_objects=custom_objects)
+    return model
 
-    # EVALUATE
-    eval_model = model
-    eval_env = EnvironmentFactory.create(env_name, **config)
+
+if __name__ == "__main__":
+    # Create test env and vecnormalize
+    env = EnvironmentFactory.create(**eval_config["env_config"])
+    vecnormalize = load_vecnormalize(eval_config["env_path"], env)
+    vecnormalize.training = False
+    vecnormalize.norm_reward = False
+
+    # Load model
+    model = load_model(eval_config["net_path"])
 
     # Enjoy trained agent
     perfs = []
     lens = []
-    for i in range(num_episodes):
-        lstm_states = None
+    episode_data = []
+    for i in range(eval_config["num_episodes"]):
+        lstm_states = (np.zeros((1, 1, 256)), np.zeros((1, 1, 256)))
         cum_rew = 0
         step = 0
-        # eval_env.reset()
-        # eval_env.step(np.zeros(39))
-        obs = eval_env.reset()
-        episode_starts = np.ones((1,), dtype=bool)
+        obs = env.reset()
+        episode_starts = torch.ones((1,))
         done = False
+        if eval_config["task"] is not None:
+            env.env.which_task = eval_config["task"]
+        obs = env.reset()
         while not done:
             if render:
-                eval_env.sim.render(mode="window")
-            action, lstm_states = eval_model.predict(
-                envs.normalize_obs(obs),
+                env.sim.render(mode="window")
+            lstm_states_tensor = (torch.tensor(lstm_states[0], dtype=torch.float32).reshape(1, -1), torch.tensor(lstm_states[1], dtype=torch.float32).reshape(1, -1))     
+            action, lstm_states = model.predict(
+                vecnormalize.normalize_obs(obs),
                 state=lstm_states,
                 episode_start=episode_starts,
                 deterministic=True,
             )
-            obs, rewards, done, info = eval_env.step(action)
+            with torch.no_grad():
+                features = model.policy.extract_features(torch.tensor(vecnormalize.normalize_obs(obs)).reshape(1, -1))
+                lstm_out, _ = model.policy.lstm_actor(features, (lstm_states_tensor[0] * (1 - episode_starts), lstm_states_tensor[1] * (1 - episode_starts)))
+                layer_1_out = model.policy.mlp_extractor.policy_net[1](model.policy.mlp_extractor.policy_net[0](lstm_out))
+                layer_2_out = model.policy.mlp_extractor.policy_net[3](model.policy.mlp_extractor.policy_net[2](layer_1_out))
+                action_pred = model.policy._get_action_dist_from_latent(layer_2_out).mode().clip(-1, 1)
+
+            assert np.allclose(action_pred, action), print(action_pred, action)
+            next_obs, rewards, done, _ = env.step(action)
+            episode_data.append(
+                [
+                    i,
+                    step,
+                    obs,
+                    action,
+                    rewards,
+                    next_obs,
+                    env.last_ctrl,
+                    env.rwd_dict,
+                    np.squeeze(lstm_states[0]),
+                    np.squeeze(lstm_states[1]),
+                    np.squeeze(lstm_out.numpy()),
+                    np.squeeze(layer_1_out.numpy()),
+                    np.squeeze(layer_2_out.numpy()),
+                    "ccw" if eval_config["task"] == Task.BAODING_CCW else "cw",
+                    env.sim.model.body_mass[env.object1_bid],
+                    env.sim.model.body_mass[env.object2_bid],
+                    env.sim.model.geom_size[env.object1_gid][0],
+                    env.sim.model.geom_size[env.object2_gid][0],
+                    env.sim.model.geom_friction[env.object1_gid][0],
+                    env.sim.model.geom_friction[env.object1_gid][1],
+                    env.sim.model.geom_friction[env.object1_gid][2],
+                    env.x_radius,
+                    env.y_radius,
+                    obs[0:23],
+                    (next_obs[0:23] - obs[0:23]) / 0.0025
+                ]
+            )
+            obs = next_obs
             episode_starts = done
             cum_rew += rewards
             step += 1
-        print(cum_rew)
+
         lens.append(step)
         perfs.append(cum_rew)
+        print("Episode", i, ", len:", step, ", cum rew: ", cum_rew)
 
-        '''if (i + 1) % 10 == 0:
+        if (i + 1) % 10 == 0:
             len_error = np.std(lens) / np.sqrt(i + 1)
             perf_error = np.std(perfs) / np.sqrt(i + 1)
 
-            print(f"\nEpisode {i+1}/{num_episodes}")
+            print(f"\nEpisode {i+1}/{eval_config['num_episodes']}")
             print(f"Average len: {np.mean(lens):.2f} +/- {len_error:.2f}")
-            print(f"Average rew: {np.mean(perfs):.2f} +/- {perf_error:.2f}\n")'''
+            print(f"Average rew: {np.mean(perfs):.2f} +/- {perf_error:.2f}\n")
 
-    print(f"\nFinished evaluating {PATH_TO_PRETRAINED_NET}!")
-    print('Mean reward of 32_phase_2_smaller_rate_resume : ', np.mean(perfs))
+    print(f"\nFinished evaluating {eval_config['net_path']}!")
+    if save_df:
+        df = pd.DataFrame(
+            episode_data,
+            columns=[
+                "episode",
+                "step",
+                "observation",
+                "action",
+                "reward",
+                "next_observation",
+                "muscle_act",
+                "rew_dict",
+                "lstm_state_0",
+                "lstm_state_1",
+                "lstm_out",
+                "layer_1_out",
+                "layer_2_out",
+                "task",
+                "mass_1",
+                "mass_2",
+                "size_1",
+                "size_2",
+                "friction_0",
+                "friction_1",
+                "friction_2",
+                "x_radius",
+                "y_radius",
+                "hand_pos",
+                "hand_vel"
+            ],
+        )
+
+    out_path = os.path.join(ROOT_DIR, "data", "rollouts", out_dir)
+    os.makedirs(out_path, exist_ok=True)
+    df.to_hdf(os.path.join(out_path, "data.hdf"), key="data")
+    with open(os.path.join(out_path, "eval_config.json"), "w", encoding="utf8") as f:
+        json.dump(eval_config, f, indent=4, default=lambda _: "<not serializable>")
+    print("Saved to ", out_path)

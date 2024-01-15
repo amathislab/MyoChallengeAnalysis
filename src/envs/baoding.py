@@ -92,63 +92,9 @@ class CustomBaodingEnv(BaodingEnvV1):
 
         return rwd_dict
 
-    def _add_noise_to_palm_position(
-        self, qpos: np.ndarray, noise: float = 1
-    ) -> np.ndarray:
-        assert 0 <= noise <= 1, "Noise must be between 0 and 1"
-
-        # pronation-supination of the wrist
-        # noise = 1 corresponds to 10 degrees from facing up (one direction only)
-        qpos[0] = self.np_random.uniform(
-            low=-np.pi / 2, high=-np.pi / 2 + np.pi / 18 * noise
-        )
-
-        # ulnar deviation of wrist:
-        # noise = 1 corresponds to 10 degrees on either side
-        qpos[1] = self.np_random.uniform(
-            low=-np.pi / 18 * noise, high=np.pi / 18 * noise
-        )
-
-        # extension flexion of the wrist
-        # noise = 1 corresponds to 10 degrees on either side
-        qpos[2] = self.np_random.uniform(
-            low=-np.pi / 18 * noise, high=np.pi / 18 * noise
-        )
-
-        return qpos
-
-    def _add_noise_to_finger_positions(
-        self, qpos: np.ndarray, noise: float = 1
-    ) -> np.ndarray:
-        assert 0 <= noise <= 1, "Noise parameter must be between 0 and 1"
-
-        # thumb all joints
-        # noise = 1 corresponds to 10 degrees on either side
-        qpos[3:7] = self.np_random.uniform(
-            low=-np.pi / 18 * noise, high=np.pi / 18 * noise
-        )
-
-        # finger joints
-        # noise = 1 corresponds to 30 degrees bent instead of fully open
-        qpos[[7, 9, 10, 11, 13, 14, 15, 17, 18, 19, 21, 22]] = self.np_random.uniform(
-            low=0, high=np.pi / 6 * noise
-        )
-
-        # finger abduction (sideways angle)
-        # noise = 1 corresponds to 5 degrees on either side
-        qpos[[8, 12, 16, 20]] = self.np_random.uniform(
-            low=-np.pi / 36 * noise, high=np.pi / 36 * noise
-        )
-
-        return qpos
-
     def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None,return_time_period=False): # CHANGE BY ABIGAIL
         self.which_task = self.sample_task()
-        if self.rsi:
-            # MODIFICATION: randomize starting target position along the cycle
-            random_phase = np.random.uniform(low=-np.pi, high=np.pi)
-        else:
-            random_phase = 0
+        random_phase = np.pi
         self.ball_1_starting_angle = 3.0 * np.pi / 4.0 + random_phase
         self.ball_2_starting_angle = -1.0 * np.pi / 4.0 + random_phase
 
@@ -177,33 +123,6 @@ class CustomBaodingEnv(BaodingEnvV1):
         qvel = self.init_qvel.copy() if reset_vel is None else reset_vel
         self.robot.reset(qpos, qvel)
 
-        if self.rsi:
-            if np.random.uniform(0, 1) < self.rsi_probability:
-                self.step(np.zeros(39))
-
-                # update ball positions
-                obs = self.get_obs().copy()
-                qpos[23] = obs[35]  # ball 1 x-position
-                qpos[24] = obs[36]  # ball 1 y-position
-                qpos[30] = obs[38]  # ball 2 x-position
-                qpos[31] = obs[39]  # ball 2 y-position
-
-        if self.noise_balls:
-            # update balls x,y,z positions with relative noise
-            for i in [23, 24, 25, 30, 31, 32]:
-                qpos[i] += np.random.uniform(
-                    low=-self.noise_balls, high=self.noise_balls
-                )
-
-        if self.noise_palm:
-            qpos = self._add_noise_to_palm_position(qpos, self.noise_palm)
-
-        if self.noise_fingers:
-            qpos = self._add_noise_to_finger_positions(qpos, self.noise_fingers)
-
-        if self.rsi or self.noise_palm or self.noise_fingers or self.noise_balls:
-            self.set_state(qpos, qvel)
-
         if return_time_period :
             return [self.get_obs(),time_period]
         else :
@@ -220,27 +139,17 @@ class CustomBaodingEnv(BaodingEnvV1):
         obs_keys: list = BaodingEnvV1.DEFAULT_OBS_KEYS,
         weighted_reward_keys: list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
         task=None,
-        enable_rsi=False,  # random state init for balls
-        noise_palm=0,  # magnitude of noise for palm (between 0 and 1)
-        noise_fingers=0,  # magnitude of noise for fingers (between 0 and 1)
-        noise_balls=0,  # relative magnitude of noise for the balls (1 is 100% relative noise)
-        rsi_probability=1,  # probability of implementing RSI
         **kwargs,
     ):
 
         # user parameters
         self.task = task
         self.which_task = self.sample_task()
-        self.rsi = enable_rsi
-        self.noise_palm = noise_palm
-        self.noise_fingers = noise_fingers
         self.drop_th = drop_th
         self.proximity_th = proximity_th
         self.goal_time_period = goal_time_period
         self.goal_xrange = goal_xrange
         self.goal_yrange = goal_yrange
-        self.noise_balls = noise_balls
-        self.rsi_probability = rsi_probability
 
         # balls start at these angles
         #   1= yellow = top right
@@ -508,45 +417,20 @@ class CustomBaodingP2Env(BaodingEnvV1):
         # reset task
         if self.task_choice == "random":
             self.which_task = self.np_random.choice(Task)
-            if np.random.uniform(0, 1) < self.overlap_probability:
-                self.ball_1_starting_angle = 3.0 * np.pi / 4.0
-            elif self.limit_init_angle:
-                random_phase = self.np_random.uniform(
-                    low=-self.limit_init_angle, high=self.limit_init_angle
-                )
+            
+        self.ball_1_starting_angle = 3.0 * np.pi / 4.0
+        
+        if self.limit_init_angle is not None:
+            random_phase = self.np_random.uniform(
+                low=-self.limit_init_angle, high=self.limit_init_angle
+            )
+            self.ball_1_starting_angle = self.ball_1_starting_angle + random_phase
+        else:
+            self.ball_1_starting_angle = self.np_random.uniform(
+                low=0, high=2 * np.pi
+            )
 
-                if self.beta_init_angle:
-                    # use beta distribution to sample the angle instead of uniform
-                    # use this to visualize the distribution looks of multiplicative factors
-                    # samples = np.random.choice([-1,1])*(np.random.beta(a,b,10_000))
-                    # h = plt.hist(samples, bins=100, density=True)
-                    # plt.show()
-                    random_phase = (
-                        self.np_random.beta(
-                            self.beta_init_angle[0], self.beta_init_angle[1]
-                        )
-                        * 2
-                        * np.pi
-                        - np.pi
-                    )
-
-                    # bimodal distribution
-                    # random_phase = (
-                    #     self.np_random.beta(self.beta_dist_init_angle["alpha"],
-                    #     self.beta_dist_init_angle["beta"]
-                    #     ) * (
-                    #     1 + self.beta_dist_init_angle["offset"]
-                    #     ) - self.beta_dist_init_angle["offset"]
-                    # )
-                    # random_phase *= self.np_random.choice([-1, 1]) * self.limit_init_angle
-
-                self.ball_1_starting_angle = 3.0 * np.pi / 4.0 + random_phase
-            else:
-                self.ball_1_starting_angle = self.np_random.uniform(
-                    low=0, high=2 * np.pi
-                )
-
-            self.ball_2_starting_angle = self.ball_1_starting_angle - np.pi
+        self.ball_2_starting_angle = self.ball_1_starting_angle - np.pi
         # reset counters
         self.counter = 0
         self.x_radius = self.np_random.uniform(
@@ -618,43 +502,6 @@ class CustomBaodingP2Env(BaodingEnvV1):
         qpos = self.init_qpos.copy() if reset_pose is None else reset_pose
         qvel = self.init_qvel.copy() if reset_vel is None else reset_vel
         self.robot.reset(qpos, qvel)
-
-        if self.rsi and np.random.uniform(0, 1) < self.rsi_probability:
-
-            random_phase = np.random.uniform(low=-np.pi, high=np.pi)
-            self.ball_1_starting_angle = 3.0 * np.pi / 4.0 + random_phase
-            self.ball_2_starting_angle = -1.0 * np.pi / 4.0 + random_phase
-            self.goal = (
-                self.create_goal_trajectory(time_step=self.dt, time_period=time_period)
-                if reset_goal is None
-                else reset_goal.copy()
-            )
-
-            # reset scene (MODIFIED from base class MujocoEnv)
-            qpos = self.init_qpos.copy() if reset_pose is None else reset_pose
-            qvel = self.init_qvel.copy() if reset_vel is None else reset_vel
-            self.robot.reset(qpos, qvel)
-            self.step(np.zeros(39))
-            # update ball positions
-            obs = self.get_obs().copy()
-            qpos[23] = obs[35]  # ball 1 x-position
-            qpos[24] = obs[36]  # ball 1 y-position
-            qpos[30] = obs[38]  # ball 2 x-position
-            qpos[31] = obs[39]  # ball 2 y-position
-            self.set_state(qpos, qvel)
-
-            if self.balls_overlap is False:
-                self.ball_1_starting_angle = self.np_random.uniform(
-                    low=0, high=2 * np.pi
-                )
-                self.ball_2_starting_angle = self.ball_1_starting_angle - np.pi
-
-        if self.noise_fingers:
-            qpos = self.init_qpos.copy() if "qpos" not in locals() else qpos
-            qvel = self.init_qvel.copy() if reset_vel is None else reset_vel
-
-            qpos = self._add_noise_to_finger_positions(qpos, self.noise_fingers)
-            self.set_state(qpos, qvel)
 
         if return_time_period :
             return [self.get_obs(),time_period]
