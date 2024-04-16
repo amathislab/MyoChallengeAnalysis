@@ -17,7 +17,6 @@ class CustomBaodingEnv(BaodingEnvV1):
         "pos_dist_2": 5.0,
         "alive": 0.0,
         "act_reg": 0.0,
-        # "palm_up": 0.0,
     }
 
     def get_reward_dict(self, obs_dict):
@@ -92,9 +91,8 @@ class CustomBaodingEnv(BaodingEnvV1):
 
         return rwd_dict
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None,return_time_period=False): # CHANGE BY ABIGAIL
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None, return_time_period=False, random_phase=np.pi): # CHANGE BY ABIGAIL
         self.which_task = self.sample_task()
-        random_phase = np.pi
         self.ball_1_starting_angle = 3.0 * np.pi / 4.0 + random_phase
         self.ball_2_starting_angle = -1.0 * np.pi / 4.0 + random_phase
 
@@ -172,6 +170,8 @@ class CustomBaodingEnv(BaodingEnvV1):
         )
 
         # init target and body sites
+        self.object1_bid = self.sim.model.body_name2id('ball1')
+        self.object2_bid = self.sim.model.body_name2id('ball2')
         self.object1_sid = self.sim.model.site_name2id("ball1_site")
         self.object2_sid = self.sim.model.site_name2id("ball2_site")
         self.object1_gid = self.sim.model.geom_name2id("ball1")
@@ -205,7 +205,13 @@ class CustomBaodingEnv(BaodingEnvV1):
                 return Task(random.choice(list(Task)))
             else:
                 raise ValueError("Unknown task for baoding: ", self.task)
-
+            
+    def get_obs_dict(self, sim):
+        obs_dict = super().get_obs_dict(sim)
+        obs_dict["muscle_len"] = np.nan_to_num(sim.data.actuator_length.copy())
+        obs_dict["muscle_vel"] = np.nan_to_num(sim.data.actuator_velocity.copy())
+        obs_dict["muscle_force"] = np.nan_to_num(sim.data.actuator_force.copy())
+        return obs_dict
 
 class CustomBaodingP2Env(BaodingEnvV1):
     def _setup(

@@ -43,4 +43,3 @@ class EnvironmentFactory:
             return gym.make("CustomMyoChallengeBaodingP2-v1", **kwargs)
         elif env_name == "MixtureModelBaodingEnv":
             return gym.make("MixtureModelBaoding-v1", **kwargs)
-
