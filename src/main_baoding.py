@@ -12,42 +12,49 @@ from train.trainer import BaodingTrainer
 
 
 # define constants
-ENV_NAME = "CustomMyoBaodingBallsP2"
+ENV_NAME = "CustomMyoBaodingBallsP1"
 
 now = datetime.now().strftime("%Y-%m-%d/%H-%M-%S")
 TENSORBOARD_LOG = os.path.join(ROOT_DIR, "output", "training", now)
 
-load_folder = "trained_models/baoding_phase2/alberto_518/"
-PATH_TO_NORMALIZED_ENV = load_folder + "training_env.pkl"
-PATH_TO_PRETRAINED_NET = load_folder + "best_model.zip"
+# load_folder = "trained_models/baoding_phase2/alberto_518/"
+PATH_TO_NORMALIZED_ENV = None  # load_folder + "training_env.pkl"
+PATH_TO_PRETRAINED_NET = None  # load_folder + "best_model.zip"
 
 # Reward structure and task parameters:
 config = {
     "weighted_reward_keys": {
-        "pos_dist_1": 2,
-        "pos_dist_2": 2,
+        "pos_dist_1": 1,
+        "pos_dist_2": 1,
         "act_reg": 0,
-        "alive": 0,
+        "alive": 1,
         "solved": 5,
         "done": 0,
         "sparse": 0,
     },
-    "task_choice": "random",
-    # custom params for curriculum learning
-    "enable_rsi": False,
-    "rsi_probability": 0,
-    "balls_overlap": False,
-    "overlap_probability": 0,
-    "noise_fingers": 0,
-    "limit_init_angle": False,
+    "task_choice": "fixed",
+    # # custom params for curriculum learning
+    # "enable_rsi": False,
+    # "rsi_probability": 0,
+    # "balls_overlap": False,
+    # "overlap_probability": 0,
+    # "noise_fingers": 0,
+    # "limit_init_angle": False,
     # "beta_init_angle": [0.9,0.9], # caution: doesn't work if limit_init_angle = False
-    "goal_time_period": [4, 6],  # phase 2: (4, 6)
-    "goal_xrange": (0.020, 0.030),  # phase 2: (0.020, 0.030)
-    "goal_yrange": (0.022, 0.032),  # phase 2: (0.022, 0.032)
+    "goal_time_period": [5, 5],  # phase 2: (4, 6)
+    # "goal_xrange": (0.020, 0.030),  # phase 2: (0.020, 0.030)
+    # "goal_yrange": (0.022, 0.032),  # phase 2: (0.022, 0.032)
     # Randomization in physical properties of the baoding balls
-    "obj_size_range": (0.018, 0.022),
-    "obj_mass_range": (0.030, 0.300),
-    "obj_friction_change": (0.2, 0.001, 0.00002),
+    # "obj_size_range": (0.018, 0.022),
+    # "obj_mass_range": (0.030, 0.300),
+    # "obj_friction_change": (0.2, 0.001, 0.00002),
+    "obs_keys": [
+        'muscle_len', 'muscle_vel', 'muscle_force',
+        'object1_pos', 'object1_velp',
+        'object2_pos', 'object2_velp',
+        'target1_pos', 'target2_pos',
+        'target1_err', 'target2_err',
+    ]
 }
 
 # Function that creates and monitors vectorized environments:
