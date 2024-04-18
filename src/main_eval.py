@@ -11,14 +11,15 @@ from myosuite.envs.myo.myochallenge.baoding_v1 import Task
 
 
 # evaluation parameters:
-render = False
-save_df = True
-out_dir = "final_model_500_episodes_activations_info_cw"
+render = True
+save_df = False
+# out_dir = "final_model_500_episodes_activations_info_cw"
+out_dir = "step_12_500_episodes_activations_info_cw"
 
 
 eval_config = {
     "env_config": {
-        "env_name": "MyoBaodingBallsP1",
+        "env_name": "CustomMyoBaodingBallsP1",
         "weighted_reward_keys": {
             "pos_dist_1": 0,
             "pos_dist_2": 0,
@@ -27,44 +28,21 @@ eval_config = {
             "done": 0,
             "sparse": 0
         },
-        "goal_time_period": [
-            4,
-            6
-        ],
-        "goal_xrange": [
-            0.02,
-            0.03
-        ],
-        "goal_yrange": [
-            0.022,
-            0.032
-        ],
-        "obj_size_range": [
-            0.018,
-            0.024
-        ],
-        "obj_mass_range": [
-            0.03,
-            0.3
-        ],
-        "obj_friction_change": [
-            0.2,
-            0.001,
-            2e-05
-        ],
-        "task_choice": "fixed"
+        "task_choice": "fixed",
+        "goal_time_period": (5, 5)
     },
     "env_path": os.path.join(
         ROOT_DIR,
-        "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/env.pkl",
+        "trained_models/curriculum_steps_complete_baoding_winner/12_period_5/env.pkl",
     ),
     "net_path": os.path.join(
         ROOT_DIR,
-        "trained_models/curriculum_steps_complete_baoding_winner/32_phase_2_smaller_rate_resume/model.zip",
+        "trained_models/curriculum_steps_complete_baoding_winner/12_period_5/model.zip",
     ),
-    "task": Task.BAODING_CW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
     "seed": 42,
+    "random_phase": 0
 }
 
 def load_vecnormalize(env_path, base_env):
@@ -87,6 +65,7 @@ def load_model(model_path):
 if __name__ == "__main__":
     # Create test env and vecnormalize
     env = EnvironmentFactory.create(**eval_config["env_config"])
+
     vecnormalize = load_vecnormalize(eval_config["env_path"], env)
     vecnormalize.training = False
     vecnormalize.norm_reward = False
@@ -107,7 +86,7 @@ if __name__ == "__main__":
         done = False
         if eval_config["task"] is not None:
             env.env.which_task = eval_config["task"]
-        obs = env.reset()
+        obs = env.reset(random_phase=eval_config["random_phase"])
         while not done:
             if render:
                 env.sim.render(mode="window")
@@ -206,9 +185,9 @@ if __name__ == "__main__":
             ],
         )
 
-    out_path = os.path.join(ROOT_DIR, "data", "rollouts", out_dir)
-    os.makedirs(out_path, exist_ok=True)
-    df.to_hdf(os.path.join(out_path, "data.hdf"), key="data")
-    with open(os.path.join(out_path, "eval_config.json"), "w", encoding="utf8") as f:
-        json.dump(eval_config, f, indent=4, default=lambda _: "<not serializable>")
-    print("Saved to ", out_path)
+        out_path = os.path.join(ROOT_DIR, "data", "rollouts", out_dir)
+        os.makedirs(out_path, exist_ok=True)
+        df.to_hdf(os.path.join(out_path, "data.hdf"), key="data")
+        with open(os.path.join(out_path, "eval_config.json"), "w", encoding="utf8") as f:
+            json.dump(eval_config, f, indent=4, default=lambda _: "<not serializable>")
+        print("Saved to ", out_path)
