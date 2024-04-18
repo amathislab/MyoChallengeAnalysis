@@ -73,3 +73,13 @@ gym.envs.registration.register(
         "task_choice": "random",
     },
 )
+
+gym.envs.registration.register(
+    id="CleanBaodingBalls-v1",
+    entry_point="envs.baoding:CleanBaodingEnv",
+    max_episode_steps=200,
+    kwargs={
+        "model_path": myosuite_path + "/assets/hand/myo_hand_baoding.mjb",
+        "normalize_act": True,
+    },
+)

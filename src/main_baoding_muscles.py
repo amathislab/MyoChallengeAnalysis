@@ -1,6 +1,7 @@
 import os
 import shutil
 import torch
+import numpy as np
 from torch import nn
 from datetime import datetime
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
@@ -14,7 +15,7 @@ from train.trainer import BaodingTrainer
 
 
 # define constants
-ENV_NAME = "CustomMyoBaodingBallsP1"
+ENV_NAME = "CleanBaodingBalls"
 
 now = datetime.now().strftime("%Y-%m-%d/%H-%M-%S")
 TENSORBOARD_LOG = os.path.join(ROOT_DIR, "output", "training", now)
@@ -34,21 +35,10 @@ config = {
         "done": 0,
         "sparse": 0,
     },
-    # # custom params for curriculum learning
-    # "enable_rsi": False,
-    # "rsi_probability": 0,
-    # "balls_overlap": False,
-    # "overlap_probability": 0,
-    # "noise_fingers": 0,
-    # "limit_init_angle": False,
-    # "beta_init_angle": [0.9,0.9], # caution: doesn't work if limit_init_angle = False
+    "initial_phase": np.pi / 2,
+    "limit_sds_angle": 0,
+    "limit_init_angle": 0,
     "goal_time_period": [5, 5],  # phase 2: (4, 6)
-    # "goal_xrange": (0.020, 0.030),  # phase 2: (0.020, 0.030)
-    # "goal_yrange": (0.022, 0.032),  # phase 2: (0.022, 0.032)
-    # Randomization in physical properties of the baoding balls
-    # "obj_size_range": (0.018, 0.022),
-    # "obj_mass_range": (0.030, 0.300),
-    # "obj_friction_change": (0.2, 0.001, 0.00002),
     "obs_keys": [
         'muscle_len', 'muscle_vel', 'muscle_force',
         'object1_pos', 'object1_velp',
@@ -101,22 +91,6 @@ if __name__ == "__main__":
     else:
         envs = VecNormalize(envs, training=True, norm_obs=True, norm_reward=True)
 
-    # eval_env = make_parallel_envs(config, num_env=1)
-    # eval_env = VecNormalize.load(PATH_TO_NORMALIZED_ENV, eval_env)
-
-    # Define callbacks for evaluation and saving the agent
-    # eval_callback = EvalCallback(
-    #     eval_env=eval_env,
-    #     callback_on_new_best=EnvDumpCallback(TENSORBOARD_LOG, verbose=0),
-    #     n_eval_episodes=10,
-    #     best_model_save_path=TENSORBOARD_LOG,
-    #     log_path=TENSORBOARD_LOG,
-    #     eval_freq=10_000,
-    #     deterministic=True,
-    #     render=False,
-    #     verbose=1,
-    # )
-
     checkpoint_callback = CheckpointCallback(
         save_freq=25_000,
         save_path=TENSORBOARD_LOG,
@@ -131,7 +105,6 @@ if __name__ == "__main__":
         load_model_path=PATH_TO_PRETRAINED_NET,
         log_dir=TENSORBOARD_LOG,
         model_config=model_config,
-        # callbacks=[eval_callback, checkpoint_callback],
         callbacks=[checkpoint_callback],
         timesteps=20_000_000,
     )
