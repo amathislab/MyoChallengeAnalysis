@@ -797,14 +797,18 @@ class CleanBaodingEnv(BaodingEnvV1):
             qpos = self.init_qpos.copy() if reset_pose is None else reset_pose
             qvel = self.init_qvel.copy() if reset_vel is None else reset_vel
             self.robot.reset(qpos, qvel)
+
             # Execute a step so that the targets move to the starting position
             self.step(-np.ones(39))
+            
             # update ball positions
-            obs = self.get_obs().copy()
-            qpos[23] = obs[35]  # ball 1 x-position
-            qpos[24] = obs[36]  # ball 1 y-position
-            qpos[30] = obs[38]  # ball 2 x-position
-            qpos[31] = obs[39]  # ball 2 y-position
+            obs_dict = self.get_obs_dict(self.sim)
+            target1_pos = obs_dict["target1_pos"].copy()
+            target2_pos = obs_dict["target2_pos"].copy()
+            qpos[23] = target1_pos[0]  # ball 1 x-position
+            qpos[24] = target1_pos[1]  # ball 1 y-position
+            qpos[30] = target2_pos[0]  # ball 2 x-position
+            qpos[31] = target2_pos[1]  # ball 2 y-position
             self.set_state(qpos=qpos, qvel=qvel)
         else:
             qpos = self.init_qpos.copy() if reset_pose is None else reset_pose

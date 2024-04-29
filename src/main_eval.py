@@ -11,7 +11,7 @@ from myosuite.envs.myo.myochallenge.baoding_v1 import Task
 
 
 # evaluation parameters:
-render = True
+render = False
 save_df = False
 # out_dir = "final_model_500_episodes_activations_info_cw"
 out_dir = "step_12_500_episodes_activations_info_cw"
@@ -19,30 +19,50 @@ out_dir = "step_12_500_episodes_activations_info_cw"
 
 eval_config = {
     "env_config": {
-        "env_name": "CustomMyoBaodingBallsP1",
+        "env_name": "CleanBaodingBalls",
         "weighted_reward_keys": {
             "pos_dist_1": 0,
             "pos_dist_2": 0,
             "act_reg": 0,
+            "alive": 0,
             "solved": 5,
             "done": 0,
             "sparse": 0
         },
-        "task_choice": "fixed",
-        "goal_time_period": (5, 5)
+        "initial_phase": 1.5707963267948966,
+        "limit_sds_angle": np.pi,
+        "limit_init_angle": 0,
+        "task_choice": "random_dir",
+        "goal_time_period": [
+            1e100,
+            1e100
+        ],
+        "obs_keys": [
+            "muscle_len",
+            "muscle_vel",
+            "muscle_force",
+            "object1_pos",
+            "object1_velp",
+            "object2_pos",
+            "object2_velp",
+            "target1_pos",
+            "target2_pos",
+            "target1_err",
+            "target2_err"
+        ]
     },
     "env_path": os.path.join(
         ROOT_DIR,
-        "trained_models/curriculum_steps_complete_baoding_winner/12_period_5/env.pkl",
+        "output/training/2024-04-18/14-40-48/rl_model_vecnormalize_20000000_steps.pkl",
     ),
     "net_path": os.path.join(
         ROOT_DIR,
-        "trained_models/curriculum_steps_complete_baoding_winner/12_period_5/model.zip",
+        "output/training/2024-04-18/14-40-48/rl_model_20000000_steps.zip",
     ),
-    "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "task": Task.BAODING_CW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
     "seed": 42,
-    "random_phase": 0
+    # "random_phase": 0
 }
 
 def load_vecnormalize(env_path, base_env):
@@ -58,7 +78,7 @@ def load_model(model_path):
         "lr_schedule": lambda _: 0,
         "clip_range": lambda _: 0,
     }
-    model = RecurrentPPO.load(model_path, custom_objects=custom_objects)
+    model = RecurrentPPO.load(model_path, custom_objects=custom_objects, device="cpu")
     return model
 
 
@@ -86,7 +106,8 @@ if __name__ == "__main__":
         done = False
         if eval_config["task"] is not None:
             env.env.which_task = eval_config["task"]
-        obs = env.reset(random_phase=eval_config["random_phase"])
+        # obs = env.reset(random_phase=eval_config["random_phase"])
+        obs = env.reset()
         while not done:
             if render:
                 env.sim.render(mode="window")

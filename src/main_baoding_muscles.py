@@ -21,8 +21,8 @@ now = datetime.now().strftime("%Y-%m-%d/%H-%M-%S")
 TENSORBOARD_LOG = os.path.join(ROOT_DIR, "output", "training", now)
 
 # load_folder = "trained_models/baoding_phase2/alberto_518/"
-PATH_TO_NORMALIZED_ENV = None  # load_folder + "training_env.pkl"
-PATH_TO_PRETRAINED_NET = None  # load_folder + "best_model.zip"
+PATH_TO_NORMALIZED_ENV = os.path.join(ROOT_DIR, "output/training/2024-04-21/19-51-02/rl_model_vecnormalize_20000000_steps.pkl")  # load_folder + "training_env.pkl"
+PATH_TO_PRETRAINED_NET = os.path.join(ROOT_DIR, "output/training/2024-04-21/19-51-02/rl_model_20000000_steps.zip")  # load_folder + "best_model.zip"
 
 # Reward structure and task parameters:
 config = {
@@ -36,9 +36,10 @@ config = {
         "sparse": 0,
     },
     "initial_phase": np.pi / 2,
-    "limit_sds_angle": 0,
+    "limit_sds_angle": np.pi,
     "limit_init_angle": 0,
-    "goal_time_period": [5, 5],  # phase 2: (4, 6)
+    "task_choice": "random_dir",
+    "goal_time_period": [25, 25],  # phase 2: (4, 6)
     "obs_keys": [
         'muscle_len', 'muscle_vel', 'muscle_force',
         'object1_pos', 'object1_velp',
