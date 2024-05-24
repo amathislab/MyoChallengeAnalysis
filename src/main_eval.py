@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import json
 import torch
+import subprocess
 from sb3_contrib import RecurrentPPO
 from stable_baselines3.common.vec_env import VecNormalize, DummyVecEnv
 from envs.environment_factory import EnvironmentFactory
@@ -11,11 +12,12 @@ from myosuite.envs.myo.myochallenge.baoding_v1 import Task
 
 
 # evaluation parameters:
-render = False
+render = True
 save_df = False
 # out_dir = "final_model_500_episodes_activations_info_cw"
 out_dir = "step_12_500_episodes_activations_info_cw"
-
+HOST = "alberto@amg5"
+HOST_PROJECT_ROOT = "/home/alberto/Dev/rl/MyoChallengeAnalysis"
 
 eval_config = {
     "env_config": {
@@ -34,8 +36,8 @@ eval_config = {
         "limit_init_angle": 0,
         "task_choice": "random_dir",
         "goal_time_period": [
-            1e100,
-            1e100
+            15,
+            15
         ],
         "obs_keys": [
             "muscle_len",
@@ -51,15 +53,9 @@ eval_config = {
             "target2_err"
         ]
     },
-    "env_path": os.path.join(
-        ROOT_DIR,
-        "output/training/2024-04-18/14-40-48/rl_model_vecnormalize_20000000_steps.pkl",
-    ),
-    "net_path": os.path.join(
-        ROOT_DIR,
-        "output/training/2024-04-18/14-40-48/rl_model_20000000_steps.zip",
-    ),
-    "task": Task.BAODING_CW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "experiment_path": os.path.join("output", "training", "2024-05-06", "15-51-36"),
+    "checkpoint_num": 20_000_000,
+    "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
     "seed": 42,
     # "random_phase": 0
@@ -81,17 +77,38 @@ def load_model(model_path):
     model = RecurrentPPO.load(model_path, custom_objects=custom_objects, device="cpu")
     return model
 
-
+def get_remote_checkpoint(experiment_path, checkpoint_num):
+    if checkpoint_num is None:
+        raise NotImplementedError("Selection of best checkpoint from the remote not implemented")
+    file_names = [
+        "args.json",
+        "env_config.json",
+        "*_config.json",
+        f"rl_model_{checkpoint_num}_steps.zip",
+        f"rl_model_vecnormalize_{checkpoint_num}_steps.pkl"
+    ]
+    file_paths = [os.path.join(f"{HOST}:{HOST_PROJECT_ROOT}", experiment_path, f) for f in file_names]
+    os.makedirs(os.path.join(ROOT_DIR, experiment_path), exist_ok=True)
+    subprocess.run(["rsync",  *file_paths, os.path.join(ROOT_DIR, experiment_path)])
+    
 if __name__ == "__main__":
     # Create test env and vecnormalize
     env = EnvironmentFactory.create(**eval_config["env_config"])
 
-    vecnormalize = load_vecnormalize(eval_config["env_path"], env)
+    if eval_config["experiment_path"] is None:
+        model = PPO(policy="MultiInputPolicy", env=env)
+        venv = DummyVecEnv([lambda: env])
+        vecnormalize = VecNormalize(venv)
+    else:
+        env_path = os.path.join(ROOT_DIR, eval_config["experiment_path"], "rl_model_vecnormalize_{}_steps.pkl".format(eval_config["checkpoint_num"]))
+        net_path = os.path.join(ROOT_DIR, eval_config["experiment_path"], "rl_model_{}_steps.zip".format(eval_config["checkpoint_num"]))
+        if not os.path.exists(net_path):
+            get_remote_checkpoint(eval_config["experiment_path"], eval_config["checkpoint_num"])
+        vecnormalize = load_vecnormalize(env_path, env)
+        model = load_model(net_path)
+        
     vecnormalize.training = False
     vecnormalize.norm_reward = False
-
-    # Load model
-    model = load_model(eval_config["net_path"])
 
     # Enjoy trained agent
     perfs = []
