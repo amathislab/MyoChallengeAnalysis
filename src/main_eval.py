@@ -30,12 +30,12 @@ eval_config = {
             "sparse": 0
         },
         "initial_phase": 1.5707963267948966,
-        "limit_sds_angle": np.pi,
+        "limit_sds_angle": 0,
         "limit_init_angle": 0,
-        "task_choice": "random_dir",
+        "task_choice": "cw",
         "goal_time_period": [
-            1e100,
-            1e100
+            9,
+            9
         ],
         "obs_keys": [
             "muscle_len",
@@ -53,13 +53,15 @@ eval_config = {
     },
     "env_path": os.path.join(
         ROOT_DIR,
-        "output/training/2024-04-18/14-40-48/rl_model_vecnormalize_20000000_steps.pkl",
+        # "output/training/2024-04-18/14-40-48/rl_model_vecnormalize_20000000_steps.pkl",
+        "output/training/2024-05-19/16-11-59/rl_model_vecnormalize_20000000_steps.pkl",
     ),
     "net_path": os.path.join(
         ROOT_DIR,
-        "output/training/2024-04-18/14-40-48/rl_model_20000000_steps.zip",
+        # "output/training/2024-04-18/14-40-48/rl_model_20000000_steps.zip",
+        "output/training/2024-05-19/16-11-59/rl_model_20000000_steps.zip",
     ),
-    "task": Task.BAODING_CW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
     "seed": 42,
     # "random_phase": 0
