@@ -32,12 +32,12 @@ eval_config = {
             "sparse": 0
         },
         "initial_phase": 1.5707963267948966,
-        "limit_sds_angle": np.pi,
+        "limit_sds_angle": 0,
         "limit_init_angle": 0,
-        "task_choice": "random_dir",
+        "task_choice": "cw",
         "goal_time_period": [
-            15,
-            15
+            9,
+            9
         ],
         "obs_keys": [
             "muscle_len",
@@ -53,7 +53,7 @@ eval_config = {
             "target2_err"
         ]
     },
-    "experiment_path": os.path.join("output", "training", "2024-05-06", "15-51-36"),
+    "experiment_path": os.path.join("output", "training", "2024-05-19", "16-11-59"),
     "checkpoint_num": 20_000_000,
     "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
