@@ -161,3 +161,7 @@ cython_debug/
 
 # Apple
 *.DS_Store
+
+# Data Files
+data/videos/
+data/figures/
