@@ -1,4 +1,4 @@
-from functions import PCA_physics
+from legacy.functions import PCA_physics
 import pickle
 import os
 from definitions import ROOT_DIR

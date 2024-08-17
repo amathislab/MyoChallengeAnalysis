@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from functions import make_parallel_envs, set_config
+from legacy.functions import make_parallel_envs, set_config
 import pickle
 from stable_baselines3.common.vec_env import VecNormalize
 from sb3_contrib import RecurrentPPO

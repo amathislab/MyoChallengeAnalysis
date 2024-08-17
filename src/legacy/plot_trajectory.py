@@ -6,19 +6,11 @@ from stable_baselines3.common.vec_env import VecNormalize
 from sb3_contrib import RecurrentPPO
 from envs.environment_factory import EnvironmentFactory
 import matplotlib.pyplot as plt
-
-# P1 model, analysis of robustness to changes in phyisical parameters (use of Env 2)
-
+import pickle
 
 if __name__=='__main__':
-    
-    def takeParameter(dict):
-        return dict['yradius']
-    
-    env_name = 'CustomMyoBaodingBallsP2' 
-    render = False
 
-    config = {
+    config_yradius = {
         "weighted_reward_keys": {
             "pos_dist_1": 0,
             "pos_dist_2": 0,
@@ -39,16 +31,16 @@ if __name__=='__main__':
             5
         ],
         "goal_xrange": [
-            0.025,
-            0.025
+            0.02,
+            0.03
         ],
         "goal_yrange": [
-            0.012,
-            0.042
+            0.022,
+            0.032
         ],
         "obj_size_range": [
-            0.022,
-            0.022
+            0.021,
+            0.021
         ],
         "obj_mass_range": [
             0.043,
@@ -59,17 +51,24 @@ if __name__=='__main__':
             0,
             0
         ],
-        "task_choice": "ccw"
+        "task_choice": "cw"
     }
+
+    env_name = 'CustomMyoBaodingBallsP2' 
+    curriculum_step = '32_phase_2_smaller_rate_resume'
+    render = False
 
     PATH_TO_NORMALIZED_ENV = os.path.join(
         ROOT_DIR,
-        'Last-model-P1/normalized_env_phase1_final',
+        'trained_models/curriculum_steps_complete_baoding_winner/'+curriculum_step+'/env.pkl',
     )
     PATH_TO_PRETRAINED_NET = os.path.join(
         ROOT_DIR,
-        'Last-model-P1/phase1_final.zip',
+        'trained_models/curriculum_steps_complete_baoding_winner/'+curriculum_step+'/model.zip',
     )
+
+    config = config_yradius
+    num_episodes = 1
 
     envs = make_parallel_envs(env_name, config, num_env=1)
     envs = VecNormalize.load(PATH_TO_NORMALIZED_ENV, envs)
@@ -87,10 +86,7 @@ if __name__=='__main__':
     eval_model = model
     eval_env = EnvironmentFactory.create(env_name,**config)
 
-    num_ep = 300
-    rwd_conf = []
-
-    for n in range(num_ep):
+    for n in range(num_episodes):
         print(n)
         cum_reward = 0
         lstm_states = None
@@ -107,26 +103,8 @@ if __name__=='__main__':
                                                     state=lstm_states,
                                                     episode_start=episode_starts,
                                                     deterministic=True,
-                                                    ) 
+                                                    ) # lstm_states is a tuple of length 2 : (h_n, c_n), we are first interested in c_n (we consider h_n as the output), each element being a numpy array of shape (1,1,256)
                                                         
             obs, rewards, done, info = eval_env.step(action)
             episode_starts = done
             cum_reward += rewards
-        rwd_conf.append({'yradius': eval_env.y_radius,'reward':cum_reward})
-    
-    rwd_conf.sort(key=takeParameter)
-    params = [d.get('yradius') for d in rwd_conf]
-    rwds = [d.get('reward') for d in rwd_conf]
-    plt.plot(params,rwds,linewidth=0.6)
-    
-    window_size = 20
-    i=0
-    moving_averages = []
-    while i < len(rwds) - window_size + 1 :
-        moving_averages.append(np.sum(rwds[i:i+window_size])/window_size)
-        i += 1
-
-    plt.plot(params[0:len(rwds)-window_size+1],moving_averages,linewidth = 1.2)
-    plt.xlabel('y trajectory radius'); plt.ylabel('Cumulative reward')
-    plt.title('Performance vs. y trajectory radius, last model phase 1')
-    plt.savefig(os.path.join(ROOT_DIR,"SIL-Results/Perf-vs-Physics/Yradius/Last-model-P1_E2_%s-configs_"%num_ep+"window-size-%s"%window_size+".png"))

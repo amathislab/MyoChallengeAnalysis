@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sb3_contrib import RecurrentPPO
 from stable_baselines3.common.vec_env import VecNormalize
-from functions import make_parallel_envs
+from legacy.functions import make_parallel_envs
 from definitions import ROOT_DIR
 from envs.environment_factory import EnvironmentFactory
 
