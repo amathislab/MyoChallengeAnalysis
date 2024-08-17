@@ -17,7 +17,7 @@ save_df = False
 # out_dir = "final_model_500_episodes_activations_info_cw"
 out_dir = "step_12_500_episodes_activations_info_cw"
 HOST = "alberto@amg5"
-HOST_PROJECT_ROOT = "/home/alberto/Dev/rl/MyoChallengeAnalysis"
+HOST_PROJECT_ROOT = "/media/disk2/alberto/MyoChallengeAnalysis"  # "/home/alberto/Dev/rl/MyoChallengeAnalysis"
 
 eval_config = {
     "env_config": {
@@ -36,8 +36,8 @@ eval_config = {
         "limit_init_angle": 0,
         "task_choice": "cw",
         "goal_time_period": [
-            9,
-            9
+            5,
+            5
         ],
         "obs_keys": [
             "muscle_len",
@@ -53,9 +53,9 @@ eval_config = {
             "target2_err"
         ]
     },
-    "experiment_path": os.path.join("output", "training", "2024-05-19", "16-11-59"),
-    "checkpoint_num": 20_000_000,
-    "task": Task.BAODING_CCW,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
+    "experiment_path": os.path.join("output", "training", "2024-06-03", "10-09-05_5"),
+    "checkpoint_num": 19_600_000,
+    "task": None,  # Task.HOLD, Task.BAODING_CCW, Task.BAODING_CW, None,
     "num_episodes": 500,
     "seed": 42,
     # "random_phase": 0

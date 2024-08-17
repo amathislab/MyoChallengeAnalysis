@@ -3,7 +3,7 @@ import joblib
 import os
 import numpy as np
 from envs.environment_factory import EnvironmentFactory
-from functions_notebook import set_config
+from legacy.functions_notebook import set_config
 
 num_steps_per_pose = 1000
 pc_idx = 1

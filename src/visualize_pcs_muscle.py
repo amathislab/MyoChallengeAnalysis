@@ -2,7 +2,7 @@ from definitions import ROOT_DIR
 import pickle
 import os
 from envs.environment_factory import EnvironmentFactory
-from functions_notebook import set_config
+from legacy.functions_notebook import set_config
 
 num_episodes = 10_000
 action_idx = 0
