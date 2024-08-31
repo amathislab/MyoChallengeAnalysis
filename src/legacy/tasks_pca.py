@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-from functions import make_parallel_envs
+from legacy.functions import make_parallel_envs
 import pandas as pd
 
 # Cross-projection similarity analysis of hold and ccw kinematic subspaces

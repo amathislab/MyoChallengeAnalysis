@@ -1,5 +1,5 @@
 import pickle
-from functions import UMAP_physics
+from legacy.functions import UMAP_physics
 import os
 from definitions import ROOT_DIR
 

@@ -1,7 +1,7 @@
 from definitions import ROOT_DIR
 import os 
 import numpy as np
-from functions import make_parallel_envs
+from legacy.functions import make_parallel_envs
 from stable_baselines3.common.vec_env import VecNormalize
 from sb3_contrib import RecurrentPPO
 from envs.environment_factory import EnvironmentFactory

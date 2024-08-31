@@ -7,7 +7,7 @@ import sklearn.linear_model
 from envs.environment_factory import EnvironmentFactory
 from sb3_contrib import RecurrentPPO
 from stable_baselines3.common.vec_env import VecNormalize
-from functions import make_parallel_envs
+from legacy.functions import make_parallel_envs
 import matplotlib.pyplot as plt
 import pickle
 

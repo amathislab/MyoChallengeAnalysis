@@ -1,6 +1,6 @@
 import os
 from definitions import ROOT_DIR
-from functions import *
+from legacy.functions import *
 import pickle
 
 # Generate data for P2 model on env 2 (saved outside the pushed file, as very heavy files)

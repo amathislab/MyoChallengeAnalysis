@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-from functions import make_parallel_envs
+from legacy.functions import make_parallel_envs
 import pickle
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split

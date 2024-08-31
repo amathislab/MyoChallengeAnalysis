@@ -1,4 +1,4 @@
-from functions import measure_tangling
+from legacy.functions import measure_tangling
 import numpy as np
 from definitions import ROOT_DIR
 import os
