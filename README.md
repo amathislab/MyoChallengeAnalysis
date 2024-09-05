@@ -5,15 +5,14 @@ Here we provide the analysis code for our winning solution for the [inaugural My
 The analysis is detailed in [Acquiring musculoskeletal skills with curriculum-based reinforcement learning](https://www.biorxiv.org/content/early/2024/01/25/2024.01.24.577123).
 
 
-## Installation
+## Installation and setup
 
 We use [Poetry](https://python-poetry.org/), a modern python packaging and dependency management software. Hopefully, this will make development a breeze and keep track of new packages that any developer installs in the pyproject.toml file. If you are unfamiliar with it, [here's a quick tutorial](https://www.youtube.com/watch?v=0f3moPe_bhk). To get started, you can use the following commands:
 
 ```sh
-# if you don't have gh installed, use the git clone command below
+# if you do not have [gh, i.e., github-CLI](https://cli.github.com)) installed, use the git clone command below
 # git clone https://github.com/amathislab/MyoChallengeAnalysis.git
 
-# clone the BAMB2024 git repository if you don't already have it
 gh repo clone amathislab/MyoChallengeAnalysis
 
 # change branch to main and pull
