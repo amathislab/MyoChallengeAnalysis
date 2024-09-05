@@ -35,13 +35,20 @@ poetry shell
 ## How to reproduce the figures?
 
 1. **Download the relevant data**
-  - The relevant data for models and rollouts is available on [zenodo](https://zenodo.org/records/13332869).
-  - Download `datasets.zip`, extract the folder and place it in [`/data`](/data/).
-  - Ensure that you have all the relevant folders: 
-    - `/data/datasets/csi/`, 
-    - `/data/datasets/rollouts/`, and 
-    - `/data/datasets/umap/`
-2. Run the jupyter notebooks in [`src`](/src/)
+  - **Option 1: Manual download**
+    - The relevant data for models and rollouts is available on [zenodo](https://zenodo.org/records/13332869).
+    - Download `datasets.zip`, extract the folder and place it in [`/data`](/data/).
+  - **Option 2: Automatic download**
+    - Run the code in the [`src/download_data.ipynb`](src/download_data.ipynb)
+    - This will download the dataset and extract it to the correct location.
+    - Please be patient. Downloading and extracting ~10GB takes a while.
+
+2. Ensure that you have all the relevant dataset folders:
+      - `/data/datasets/csi/`,
+      - `/data/datasets/rollouts/`, and
+      - `/data/datasets/umap/`
+
+3. Run the jupyter notebooks in [`src`](/src/)
 
 ## Literature
 
