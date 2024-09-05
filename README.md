@@ -11,7 +11,7 @@ We use [Poetry](https://python-poetry.org/), a modern python packaging and depen
 
 ```sh
 # if you don't have gh installed, use the git clone command below
-# git clone https://github.com/bambschool/BAMB2024.git
+# git clone https://github.com/amathislab/MyoChallengeAnalysis.git
 
 # clone the BAMB2024 git repository if you don't already have it
 gh repo clone amathislab/MyoChallengeAnalysis
