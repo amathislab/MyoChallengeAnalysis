@@ -1,4 +1,4 @@
-# MyoChallenge Analysis Code for Musculoskeletal Skills Acquisition
+# MyoChallenge Analysis Code for Musculoskeletal Skill Acquisition
 
 ## Overview
 
