@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "myochallengeanalysis"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+myosuite = "^2.7.0"
+numpy = "^2.1.1"
+stable-baselines3 = "^2.3.2"
+sb3-contrib = "^2.3.0"
+ipykernel = "^6.29.5"
+scikit-learn = "^1.5.1"
+tensorboard = "^2.17.1"
+scipy = "^1.14.1"
+ruff = "^0.6.3"
+seaborn = "^0.13.2"
+tables = "^3.10.1"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
