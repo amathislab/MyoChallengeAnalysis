@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the analysis code for the second part of our paper [Chiappa, A. S.†, Tano, P.†, Patel, N.†, Ingster, A., Pouget, A., & Mathis, A. (2024). Acquiring musculoskeletal skills with curriculum-based reinforcement learning. *Neuron (in press)*.](https://www.biorxiv.org/content/early/2024/01/25/2024.01.24.577123). Our work combines musculoskeletal simulation, reinforcement learning, and neuroscience to advance the understanding of biological motor control.
+This repository contains the analysis code for the second part of our paper [Chiappa, A. S.†, Tano, P.†, Patel, N.†, Ingster, A., Pouget, A., & Mathis, A. (2024). Acquiring musculoskeletal skills with curriculum-based reinforcement learning. Neuron.](https://www.sciencedirect.com/science/article/pii/S0896627324006500). Our work combines musculoskeletal simulation, reinforcement learning, and neuroscience to advance the understanding of biological motor control ([EPFL blog](https://actu.epfl.ch/news/modeling-the-minutia-of-motor-manipulation-with-ai/), [YT Shorts](https://youtube.com/shorts/cHAu9eYfmM4?si=s8tF3DPvzvPo5ygX)).
 
 The analyses in this repository complement our winning solution for the inaugural NeurIPS MyoChallenge, where we trained a recurrent neural network to control a realistic model of the human hand to rotate two Baoding balls. For the code of the winning solution (PPO-LSTM + SDS curriculum to solve the MyoChallenge), please refer to our separate repository, [MyoChallenge](https://github.com/amathislab/myochallenge).
 
